@@ -64,6 +64,20 @@ app.put("/orders/:id", async (req, res) => {
   }
 });
 
+// 🗑️ DELETE: Delete an order by MongoDB _id
+app.delete("/orders/:id", async (req, res) => {
+  try {
+    const deletedOrder = await Order.findByIdAndDelete(req.params.id);
+
+    if (!deletedOrder) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json({ message: "Order deleted successfully ✅", deletedOrder });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 
 
