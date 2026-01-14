@@ -2,13 +2,10 @@ const Order = require("./models/Order");
 const express = require("express");
 const path = require("path");
 
-
-
 // 👇 FORCE dotenv to read root .env
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
 const connectDB = require("./config/db");
-
 
 const app = express();
 app.use(express.json());
@@ -31,8 +28,37 @@ app.post("/orders", async (req, res) => {
 
 app.get("/orders", async (req, res) => {
   try {
-    const orders = await Order.find();
+    const orders = await Order.find().sort({ createdAt: -1 });
     res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ PUT: Update an order (example: update status)
+const mongoose = require("mongoose");
+
+// ✅ PUT: Update order by MongoDB _id
+app.put("/orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ObjectId format (prevents silent not-found issues)
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid order id format" });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json(updatedOrder);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -40,8 +66,8 @@ app.get("/orders", async (req, res) => {
 
 
 
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
