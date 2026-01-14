@@ -1,120 +1,172 @@
-const ordersDiv = document.getElementById("orders");
-const msg = document.getElementById("msg");
-const formMsg = document.getElementById("formMsg");
+const ordersList = document.getElementById("ordersList");
+const emptyState = document.getElementById("emptyState");
+const loadingEl = document.getElementById("loading");
+const toastEl = document.getElementById("toast");
 
-const form = document.getElementById("orderForm");
+const createForm = document.getElementById("createForm");
+const createBtn = document.getElementById("createBtn");
+const refreshBtn = document.getElementById("refreshBtn");
 
-async function loadOrders() {
-  ordersDiv.innerHTML = "";
-  msg.textContent = "Loading...";
-  try {
-    const res = await fetch("/orders");
-    const data = await res.json();
+function showToast(msg, type = "ok") {
+  toastEl.textContent = msg;
+  toastEl.classList.remove("hidden", "ok", "err");
+  toastEl.classList.add(type === "err" ? "err" : "ok");
 
-    msg.textContent = "";
+  setTimeout(() => toastEl.classList.add("hidden"), 2200);
+}
 
-    if (!data.length) {
-      ordersDiv.innerHTML = "<p>No orders yet.</p>";
-      return;
-    }
+function setLoading(isLoading) {
+  loadingEl.classList.toggle("hidden", !isLoading);
+  refreshBtn.disabled = isLoading;
+  createBtn.disabled = isLoading;
+}
 
-    data.forEach(order => {
-      const div = document.createElement("div");
-      div.className = "order";
-      div.innerHTML = `
-        <b>${order.orderId}</b> — ${order.customerName}<br/>
-        Status: <b>${order.status}</b><br/>
-        Item: ${order.items?.[0]?.name || "N/A"} (Qty: ${order.items?.[0]?.quantity || 0})<br/>
-        <small>ID: ${order._id}</small>
+function badgeClass(status) {
+  const s = (status || "").toLowerCase();
+  if (s === "shipped") return "badge shipped";
+  if (s === "delivered") return "badge delivered";
+  return "badge pending";
+}
 
-        <div class="actions">
-          <select id="status-${order._id}">
-            <option value="PENDING" ${order.status === "PENDING" ? "selected" : ""}>PENDING</option>
-            <option value="SHIPPED" ${order.status === "SHIPPED" ? "selected" : ""}>SHIPPED</option>
-            <option value="DELIVERED" ${order.status === "DELIVERED" ? "selected" : ""}>DELIVERED</option>
-          </select>
+function renderOrders(orders) {
+  ordersList.innerHTML = "";
 
-          <button class="btn-update" onclick="updateStatus('${order._id}')">Update</button>
-          <button class="btn-delete" onclick="deleteOrder('${order._id}')">Delete</button>
+  if (!orders || orders.length === 0) {
+    emptyState.classList.remove("hidden");
+    return;
+  }
+  emptyState.classList.add("hidden");
+
+  for (const o of orders) {
+    const row = document.createElement("div");
+    row.className = "orderRow";
+
+    const created = o.createdAt ? new Date(o.createdAt).toLocaleString() : "-";
+
+    row.innerHTML = `
+      <div class="left">
+        <div class="meta">
+          <strong>${o.orderId}</strong>
+          <span class="${badgeClass(o.status)}">${o.status}</span>
+          <span class="small">Customer: ${o.customerName}</span>
         </div>
-      `;
-      ordersDiv.appendChild(div);
-    });
-  } catch (err) {
-    msg.textContent = "Failed to load orders.";
+        <div class="small">Created: ${created}</div>
+      </div>
+
+      <div class="actions">
+        <select data-id="${o._id}">
+          <option value="PENDING" ${o.status === "PENDING" ? "selected" : ""}>PENDING</option>
+          <option value="SHIPPED" ${o.status === "SHIPPED" ? "selected" : ""}>SHIPPED</option>
+          <option value="DELIVERED" ${o.status === "DELIVERED" ? "selected" : ""}>DELIVERED</option>
+        </select>
+
+        <button class="secondary" data-update="${o._id}">Update</button>
+        <button class="btnDanger" data-del="${o._id}">Delete</button>
+      </div>
+    `;
+
+    ordersList.appendChild(row);
   }
 }
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  formMsg.textContent = "Creating...";
+async function loadOrders() {
   try {
-    const body = {
-      orderId: document.getElementById("orderId").value,
-      customerName: document.getElementById("customerName").value,
-      items: [
-        {
-          name: document.getElementById("itemName").value,
-          quantity: Number(document.getElementById("quantity").value)
-        }
-      ],
-      status: "PENDING"
-    };
+    setLoading(true);
+    const res = await fetch("/orders");
+    const data = await res.json();
+    renderOrders(data);
+  } catch (err) {
+    showToast("Failed to load orders", "err");
+  } finally {
+    setLoading(false);
+  }
+}
 
+createForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const orderId = document.getElementById("orderId").value.trim();
+  const customerName = document.getElementById("customerName").value.trim();
+  const itemName = document.getElementById("itemName").value.trim();
+  const quantity = Number(document.getElementById("quantity").value);
+
+  try {
+    setLoading(true);
     const res = await fetch("/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+      body: JSON.stringify({
+        orderId,
+        customerName,
+        items: [{ name: itemName, quantity }],
+        status: "PENDING",
+      }),
     });
 
     const data = await res.json();
-    if (!res.ok) {
-      formMsg.textContent = data.error || "Error creating order";
-      return;
-    }
+    if (!res.ok) throw new Error(data.error || "Create failed");
 
-    form.reset();
-    formMsg.textContent = "✅ Order created!";
-    loadOrders();
+    showToast("Order created ✅");
+    createForm.reset();
+    await loadOrders();
   } catch (err) {
-    formMsg.textContent = "Error creating order";
+    showToast(err.message, "err");
+  } finally {
+    setLoading(false);
   }
 });
 
-async function updateStatus(id) {
-  const status = document.getElementById(`status-${id}`).value;
-  try {
-    const res = await fetch(`/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status })
-    });
+ordersList.addEventListener("click", async (e) => {
+  const updateId = e.target.getAttribute("data-update");
+  const deleteId = e.target.getAttribute("data-del");
 
-    const data = await res.json();
-    if (!res.ok) {
-      alert(data.error || "Update failed");
-      return;
+  // UPDATE
+  if (updateId) {
+    const select = ordersList.querySelector(`select[data-id="${updateId}"]`);
+    const status = select.value;
+
+    try {
+      setLoading(true);
+      const res = await fetch(`/orders/${updateId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Update failed");
+
+      showToast("Order updated ✅");
+      await loadOrders();
+    } catch (err) {
+      showToast(err.message, "err");
+    } finally {
+      setLoading(false);
     }
-
-    loadOrders();
-  } catch (err) {
-    alert("Update failed");
   }
-}
 
-async function deleteOrder(id) {
-  if (!confirm("Delete this order?")) return;
-  try {
-    const res = await fetch(`/orders/${id}`, { method: "DELETE" });
-    const data = await res.json();
-    if (!res.ok) {
-      alert(data.error || "Delete failed");
-      return;
+  // DELETE
+  if (deleteId) {
+    const ok = confirm("Delete this order?");
+    if (!ok) return;
+
+    try {
+      setLoading(true);
+      const res = await fetch(`/orders/${deleteId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Delete failed");
+
+      showToast("Order deleted ✅");
+      await loadOrders();
+    } catch (err) {
+      showToast(err.message, "err");
+    } finally {
+      setLoading(false);
     }
-    loadOrders();
-  } catch (err) {
-    alert("Delete failed");
   }
-}
+});
 
+refreshBtn.addEventListener("click", loadOrders);
+
+// initial load
 loadOrders();

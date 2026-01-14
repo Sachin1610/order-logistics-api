@@ -1,35 +1,50 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Order & Logistics</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <div class="container">
     <h1>Order & Logistics Dashboard</h1>
 
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Create Order -->
     <div class="card">
       <h2>Create Order</h2>
-      <form id="orderForm">
-        <input type="text" id="orderId" placeholder="Order ID (e.g., ORD-1002)" required />
-        <input type="text" id="customerName" placeholder="Customer Name" required />
-        <input type="text" id="itemName" placeholder="Item Name" required />
-        <input type="number" id="quantity" placeholder="Quantity" required min="1" />
 
-        <button type="submit">Create</button>
+      <form id="createForm" class="form">
+        <input id="orderId" placeholder="Order ID (e.g., ORD-1002)" required />
+        <input id="customerName" placeholder="Customer Name" required />
+        <input id="itemName" placeholder="Item Name" required />
+        <input id="quantity" placeholder="Quantity" type="number" min="1" required />
+
+        <button id="createBtn" type="submit">Create</button>
       </form>
-      <p id="formMsg"></p>
     </div>
 
+    <!-- Orders -->
     <div class="card">
-      <h2>Orders</h2>
-      <div id="orders"></div>
-      <p id="msg"></p>
+      <div class="cardHeader">
+        <h2>Orders</h2>
+        <button id="refreshBtn" class="secondary">Refresh</button>
+      </div>
+
+      <!-- Loading row -->
+      <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <span>Loading orders...</span>
+      </div>
+
+      <div id="ordersList" class="ordersList"></div>
+      <div id="emptyState" class="emptyState hidden">No orders yet.</div>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>

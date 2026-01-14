@@ -1,24 +1,30 @@
-const Order = require("./models/Order");
+// src/index.js
+
 const express = require("express");
 const path = require("path");
+const mongoose = require("mongoose");
 
-// 👇 FORCE dotenv to read root .env
-require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
-
+const Order = require("./models/Order");
 const connectDB = require("./config/db");
+
+// ✅ FORCE dotenv to read root .env (project root)
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
 const app = express();
 app.use(express.json());
 
+// ✅ Serve frontend from /public
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-// Connect DB
+// ✅ Connect DB
 connectDB();
 
+// ✅ Root loads UI (index.html)
 app.get("/", (req, res) => {
-  res.json({ message: "Order & Logistics API is running ✅" });
+  res.sendFile(path.join(__dirname, "..", "public", "index.html"));
 });
 
+// ✅ CREATE: POST /orders
 app.post("/orders", async (req, res) => {
   try {
     const order = await Order.create(req.body);
@@ -28,6 +34,7 @@ app.post("/orders", async (req, res) => {
   }
 });
 
+// ✅ READ ALL: GET /orders
 app.get("/orders", async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
@@ -37,10 +44,16 @@ app.get("/orders", async (req, res) => {
   }
 });
 
-// ✅ GET: Get a single order by MongoDB _id
+// ✅ READ ONE: GET /orders/:id  (MongoDB _id)
 app.get("/orders/:id", async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid order id format" });
+    }
+
+    const order = await Order.findById(id);
 
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
@@ -48,29 +61,23 @@ app.get("/orders/:id", async (req, res) => {
 
     res.json(order);
   } catch (err) {
-    res.status(400).json({ error: "Invalid order ID" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-
-// ✅ PUT: Update an order (example: update status)
-const mongoose = require("mongoose");
-
-// ✅ PUT: Update order by MongoDB _id
+// ✅ UPDATE: PUT /orders/:id  (MongoDB _id)
 app.put("/orders/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate ObjectId format (prevents silent not-found issues)
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid order id format" });
     }
 
-    const updatedOrder = await Order.findByIdAndUpdate(
-      id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const updatedOrder = await Order.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedOrder) {
       return res.status(404).json({ error: "Order not found" });
@@ -82,10 +89,16 @@ app.put("/orders/:id", async (req, res) => {
   }
 });
 
-// 🗑️ DELETE: Delete an order by MongoDB _id
+// ✅ DELETE: DELETE /orders/:id  (MongoDB _id)
 app.delete("/orders/:id", async (req, res) => {
   try {
-    const deletedOrder = await Order.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid order id format" });
+    }
+
+    const deletedOrder = await Order.findByIdAndDelete(id);
 
     if (!deletedOrder) {
       return res.status(404).json({ error: "Order not found" });
@@ -93,11 +106,9 @@ app.delete("/orders/:id", async (req, res) => {
 
     res.json({ message: "Order deleted successfully ✅", deletedOrder });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
-
-
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
