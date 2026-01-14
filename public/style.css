@@ -1,0 +1,72 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+h1 {
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #111827;
+  border: 1px solid #334155;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #0b1220;
+  color: #e2e8f0;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #22c55e;
+  color: black;
+  font-weight: bold;
+}
+
+.order {
+  border: 1px solid #334155;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+}
+.btn-update {
+  background: #38bdf8;
+  color: black;
+}
+select {
+  padding: 8px;
+  border-radius: 6px;
+}

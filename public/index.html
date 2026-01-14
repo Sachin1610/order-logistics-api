@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order & Logistics</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Order & Logistics Dashboard</h1>
+
+    <div class="card">
+      <h2>Create Order</h2>
+      <form id="orderForm">
+        <input type="text" id="orderId" placeholder="Order ID (e.g., ORD-1002)" required />
+        <input type="text" id="customerName" placeholder="Customer Name" required />
+        <input type="text" id="itemName" placeholder="Item Name" required />
+        <input type="number" id="quantity" placeholder="Quantity" required min="1" />
+
+        <button type="submit">Create</button>
+      </form>
+      <p id="formMsg"></p>
+    </div>
+
+    <div class="card">
+      <h2>Orders</h2>
+      <div id="orders"></div>
+      <p id="msg"></p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
