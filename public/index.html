@@ -12,24 +12,11 @@
 
 
     <!-- AUTH -->
-<div class="card" id="authCard">
-  <div class="cardHeader">
-    <h2>Authentication</h2>
-    <div id="authInfo" class="small"></div>
-  </div>
-
-  <form id="authForm" class="form">
-    <input id="authName" placeholder="Name (Register only)" />
-    <input id="authEmail" placeholder="Email" required />
-    <input id="authPassword" type="password" placeholder="Password" required />
-
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button id="loginBtn" type="button">Login</button>
-      <button id="registerBtn" type="button" class="secondary">Register</button>
-      <button id="logoutBtn" type="button" class="btnDanger">Logout</button>
-    </div>
-  </form>
+<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px;">
+  <div id="userInfo" class="small"></div>
+  <button id="logoutBtn" class="btnDanger">Logout</button>
 </div>
+
 
     <!-- Toast -->
     <div id="toast" class="toast hidden"></div>

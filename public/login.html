@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Order & Logistics</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+  <div class="container">
+    <h1>Order & Logistics</h1>
+
+    <div class="card">
+      <h2>Login / Register</h2>
+
+      <div id="toast" class="toast hidden"></div>
+
+      <form id="authForm" class="form">
+        <input id="authName" placeholder="Name (Register only)" />
+        <input id="authEmail" placeholder="Email" required />
+        <input id="authPassword" type="password" placeholder="Password" required />
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="loginBtn" type="button">Login</button>
+          <button id="registerBtn" type="button" class="secondary">Register</button>
+        </div>
+
+        <div id="authInfo" class="small"></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="./login.js"></script>
+</body>
+</html>
